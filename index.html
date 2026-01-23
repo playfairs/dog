@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            width: 100vw;
+            height: 100vh;
+            background: black;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+        }
+
+        .entry-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: black;
+            z-index: 1000;
+            cursor: pointer;
+        }
+
+        .entry-screen.hidden {
+            display: none;
+        }
+
+        .dog-video {
+            position: absolute;
+            width: 150px;
+            height: 150px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            object-fit: cover;
+            border: 2px solid white;
+        }
+
+
+    </style>
+</head>
+<body>
+    <div class="entry-screen" id="entryScreen">
+        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-size: 48px; font-weight: bold; text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);">Click to enter</div>
+    </div>
+    <script>
+        const container = document.body;
+        const videoSize = 150;
+        const videos = [];
+        let hasStarted = false;
+        let draggedDog = null;
+        let dragOffsetX = 0;
+        let dragOffsetY = 0;
+
+
+        class BouncingDog {
+            constructor(id) {
+                this.video = document.createElement('video');
+                this.video.src = 'dog.mp4';
+                this.video.autoplay = true;
+                this.video.loop = true;
+                this.video.muted = !hasStarted;
+                this.video.className = 'dog-video';
+                this.video.playsInline = true;
+                
+                this.size = Math.random() * 120 + 80;
+                this.video.style.width = this.size + 'px';
+                this.video.style.height = this.size + 'px';
+                
+                container.appendChild(this.video);
+
+                this.x = Math.random() * (window.innerWidth - this.size);
+                this.y = Math.random() * (window.innerHeight - this.size);
+
+                this.vx = (Math.random() - 0.5) * 8;
+                this.vy = (Math.random() - 0.5) * 8;
+
+                if (Math.abs(this.vx) < 2) this.vx = this.vx > 0 ? 2 : -2;
+                if (Math.abs(this.vy) < 2) this.vy = this.vy > 0 ? 2 : -2;
+
+                this.isDragging = false;
+                this.lastX = this.x;
+                this.lastY = this.y;
+                this.updatePosition();
+
+                // YEET
+                this.video.addEventListener('mousedown', (e) => {
+                    draggedDog = this;
+                    this.isDragging = true;
+                    dragOffsetX = e.clientX - this.x;
+                    dragOffsetY = e.clientY - this.y;
+                    this.video.style.cursor = 'grabbing';
+                });
+            }
+
+            update() {
+                if (this.isDragging) {
+                    return;
+                }
+
+                this.x += this.vx;
+                this.y += this.vy;
+
+                if (this.x <= 0 || this.x + this.size >= window.innerWidth) {
+                    this.vx *= -1;
+                    this.x = Math.max(0, Math.min(this.x, window.innerWidth - this.size));
+                }
+
+                if (this.y <= 0 || this.y + this.size >= window.innerHeight) {
+                    this.vy *= -1;
+                    this.y = Math.max(0, Math.min(this.y, window.innerHeight - this.size));
+                }
+
+                this.updatePosition();
+            }
+
+            updatePosition() {
+                this.video.style.left = this.x + 'px';
+                this.video.style.top = this.y + 'px';
+            }
+        }
+
+        document.addEventListener('mousemove', (e) => {
+            if (draggedDog) {
+                draggedDog.lastX = draggedDog.x;
+                draggedDog.lastY = draggedDog.y;
+                
+                draggedDog.x = e.clientX - dragOffsetX;
+                draggedDog.y = e.clientY - dragOffsetY;
+                
+                draggedDog.x = Math.max(0, Math.min(draggedDog.x, window.innerWidth - draggedDog.size));
+                draggedDog.y = Math.max(0, Math.min(draggedDog.y, window.innerHeight - draggedDog.size));
+                
+                draggedDog.updatePosition();
+            }
+        });
+
+        document.addEventListener('mouseup', () => {
+            if (draggedDog) {
+                draggedDog.vx = draggedDog.x - draggedDog.lastX;
+                draggedDog.vy = draggedDog.y - draggedDog.lastY;
+                
+                draggedDog.isDragging = false;
+                draggedDog.video.style.cursor = 'grab';
+                draggedDog = null;
+            }
+        });
+
+        function spawnDog() {
+            if (videos.length < 30) {
+                videos.push(new BouncingDog(videos.length));
+            }
+            const delay = Math.random() * 4000 + 1000;
+            setTimeout(spawnDog, delay);
+        }
+        
+        const entryScreen = document.getElementById('entryScreen');
+        entryScreen.addEventListener('click', () => {
+            if (!hasStarted) {
+                hasStarted = true;
+                entryScreen.classList.add('hidden');
+                videos.forEach(dog => {
+                    dog.video.muted = false;
+                });
+                spawnDog();
+            }
+        });
+
+        function animate() {
+            videos.forEach(dog => dog.update());
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+
+        window.addEventListener('resize', () => {
+            videos.forEach(dog => {
+                dog.x = Math.max(0, Math.min(dog.x, window.innerWidth - videoSize));
+                dog.y = Math.max(0, Math.min(dog.y, window.innerHeight - videoSize));
+                dog.updatePosition();
+            });
+        });
+    </script>
+</body>
+</html>
