@@ -59,6 +59,10 @@
             border: 2px solid white;
         }
 
+        .dog-video.hero {
+            border-radius: 0px;
+            border: none;
+        }
 
     </style>
 </head>
@@ -68,32 +72,43 @@
     </div>
     <script>
         const container = document.body;
-        const videoSize = 150;
         const videos = [];
         let hasStarted = false;
         let draggedDog = null;
         let dragOffsetX = 0;
         let dragOffsetY = 0;
+        let heroDog = null;
 
 
         class BouncingDog {
-            constructor(id, isAudioEnabled) {
+            constructor(id, isAudioEnabled, isHero = false) {
                 this.video = document.createElement('video');
                 this.video.src = 'dog.mp4';
                 this.video.autoplay = true;
                 this.video.loop = true;
                 this.video.muted = !isAudioEnabled;
-                this.video.className = 'dog-video';
+                this.video.className = isHero ? 'dog-video hero' : 'dog-video';
                 this.video.playsInline = true;
                 
-                this.size = Math.random() * 120 + 80;
-                this.video.style.width = this.size + 'px';
-                this.video.style.height = this.size + 'px';
+                if (isHero) {
+                    this.size = Math.min(window.innerWidth, window.innerHeight) * 0.9;
+                    this.video.style.width = this.size + 'px';
+                    this.video.style.height = this.size + 'px';
+                } else {
+                    this.size = Math.random() * 120 + 80;
+                    this.video.style.width = this.size + 'px';
+                    this.video.style.height = this.size + 'px';
+                }
                 
                 container.appendChild(this.video);
 
-                this.x = Math.random() * (window.innerWidth - this.size);
-                this.y = Math.random() * (window.innerHeight - this.size);
+                if (isHero) {
+                    this.x = (window.innerWidth - this.size) / 2;
+                    this.y = (window.innerHeight - this.size) / 2;
+                } else {
+                    this.x = Math.random() * (window.innerWidth - this.size);
+                    this.y = Math.random() * (window.innerHeight - this.size);
+                }
 
                 this.vx = (Math.random() - 0.5) * 8;
                 this.vy = (Math.random() - 0.5) * 8;
@@ -102,12 +117,14 @@
                 if (Math.abs(this.vy) < 2) this.vy = this.vy > 0 ? 2 : -2;
 
                 this.isDragging = false;
+                this.isHero = isHero;
                 this.lastX = this.x;
                 this.lastY = this.y;
                 this.updatePosition();
 
                 // YEET
                 this.video.addEventListener('mousedown', (e) => {
+                    if (this.isHero) return;
                     draggedDog = this;
                     this.isDragging = true;
                     dragOffsetX = e.clientX - this.x;
@@ -117,6 +134,9 @@
             }
 
             update() {
+                if (this.isHero) {
+                    return;
+                }
                 if (this.isDragging) {
                     return;
                 }
@@ -183,9 +203,8 @@
             if (!hasStarted) {
                 hasStarted = true;
                 entryScreen.classList.add('hidden');
-                if (videos[0]) {
-                    videos[0].video.muted = false;
-                }
+                heroDog = new BouncingDog(0, true, true);
+                videos.push(heroDog);
                 spawnDog();
             }
         });
@@ -199,8 +218,16 @@
 
         window.addEventListener('resize', () => {
             videos.forEach(dog => {
-                dog.x = Math.max(0, Math.min(dog.x, window.innerWidth - videoSize));
-                dog.y = Math.max(0, Math.min(dog.y, window.innerHeight - videoSize));
+                if (dog.isHero) {
+                    dog.size = Math.min(window.innerWidth, window.innerHeight) * 0.9;
+                    dog.video.style.width = dog.size + 'px';
+                    dog.video.style.height = dog.size + 'px';
+                    dog.x = (window.innerWidth - dog.size) / 2;
+                    dog.y = (window.innerHeight - dog.size) / 2;
+                } else {
+                    dog.x = Math.max(0, Math.min(dog.x, window.innerWidth - dog.size));
+                    dog.y = Math.max(0, Math.min(dog.y, window.innerHeight - dog.size));
+                }
                 dog.updatePosition();
             });
         });
