@@ -57,16 +57,12 @@
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
             object-fit: cover;
             border: 2px solid white;
+            will-change: transform;
         }
 
         .dog-video.hero {
             border-radius: 0px;
             border: none;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
         }
 
     </style>
@@ -78,11 +74,16 @@
     <script>
         const container = document.body;
         const videos = [];
+        const MAX_DOGS = 67;
+        const SPAWN_MIN = 1200;
+        const SPAWN_MAX = 3000;
+        const EFFECT_INTERVAL = 120;
         let hasStarted = false;
         let draggedDog = null;
         let dragOffsetX = 0;
         let dragOffsetY = 0;
         let heroDog = null;
+        let isPageVisible = true;
 
 
         class BouncingDog {
@@ -91,6 +92,7 @@
                 this.video.src = 'dog.mp4';
                 this.video.autoplay = true;
                 this.video.loop = true;
+                this.video.preload = isHero ? 'auto' : 'metadata';
                 this.video.muted = !isAudioEnabled;
                 this.video.className = isHero ? 'dog-video hero' : 'dog-video';
                 this.video.playsInline = true;
@@ -132,13 +134,13 @@
                             filterString += 'hue-rotate(320deg) saturate(1.5)'; // pink
                         }
                         this.video.style.filter = filterString;
-                    } else if (colorChance > 5.5) {
+                    } else if (colorChance > 0.95) {
                         this.video.style.filter = 'invert(1)';
                     }
                 }
 
-                this.vx = (Math.random() - 0.5) * 8;
-                this.vy = (Math.random() - 0.5) * 8;
+                this.vx = (Math.random() - 0.5) * 6;
+                this.vy = (Math.random() - 0.5) * 6;
 
                 if (Math.abs(this.vx) < 2) this.vx = this.vx > 0 ? 2 : -2;
                 if (Math.abs(this.vy) < 2) this.vy = this.vy > 0 ? 2 : -2;
@@ -147,12 +149,11 @@
                 this.isHero = isHero;
                 this.lastX = this.x;
                 this.lastY = this.y;
-                this.rotation = 0;
-                this.rotationSpeed = (Math.random() - 0.5) * 15;
-                this.randomEffectCounter = Math.random() * 100;
+                this.randomEffectCounter = Math.random() * EFFECT_INTERVAL;
+                this.effectTransform = '';
                 this.updatePosition();
 
-                this.video.addEventListener('mousedown', (e) => {
+                this.video.addEventListener('pointerdown', (e) => {
                     if (e.button !== 0 || this.isHero) return;
                     draggedDog = this;
                     this.isDragging = true;
@@ -164,30 +165,14 @@
                 this.video.addEventListener('auxclick', (e) => {
                     if (e.button === 1 && !this.isHero) {
                         e.preventDefault();
-                        const speed = 900;
+                        const speed = 700;
                         this.vx = (Math.random() - 0.5) * speed * 2;
-                        this.vy = (Math.random() - 0.5) * speed * 2;                        
-                        const effectType = Math.floor(Math.random() * 4);
-                        
-                        if (effectType === 0) {
-                            // HELICOPTER HELICOPTER
-                            this.video.style.animation = 'spin 0.5s ease-out';
-                            setTimeout(() => { this.video.style.animation = ''; }, 500);
-                        } else if (effectType === 1) {
-                            this.video.style.transform = 'scaleX(-1)';
-                            setTimeout(() => { this.video.style.transform = ''; }, 400);
-                        } else if (effectType === 2) {
-                            this.video.style.filter = 'invert(1)';
-                            setTimeout(() => { this.video.style.filter = ''; }, 400);
-                        } else {
-                            this.video.style.transform = 'scale(1.5)';
-                            setTimeout(() => { this.video.style.transform = ''; }, 300);
-                        }
+                        this.vy = (Math.random() - 0.5) * speed * 2;
                     }
                 });
             }
 
-            update() {
+            update(viewportWidth, viewportHeight) {
                 if (this.isHero) {
                     return;
                 }
@@ -195,56 +180,41 @@
                     return;
                 }
 
-                this.rotation += this.rotationSpeed;
-                if (this.rotation >= 360) this.rotation -= 360;
-                if (this.rotation < 0) this.rotation += 360;
-
                 this.x += this.vx;
                 this.y += this.vy;
 
-                if (this.x <= 0 || this.x + this.size >= window.innerWidth) {
-                    const rotationRad = (this.rotation % 360) * Math.PI / 180;
+                if (this.x <= 0 || this.x + this.size >= viewportWidth) {
                     this.vx *= -1;
-                    this.vy += Math.sin(rotationRad) * 3;
-                    this.x = Math.max(0, Math.min(this.x, window.innerWidth - this.size));
+                    this.x = Math.max(0, Math.min(this.x, viewportWidth - this.size));
                 }
 
-                if (this.y <= 0 || this.y + this.size >= window.innerHeight) {
-                    const rotationRad = (this.rotation % 360) * Math.PI / 180;
+                if (this.y <= 0 || this.y + this.size >= viewportHeight) {
                     this.vy *= -1;
-                    this.vx += Math.cos(rotationRad) * 3;
-                    this.y = Math.max(0, Math.min(this.y, window.innerHeight - this.size));
+                    this.y = Math.max(0, Math.min(this.y, viewportHeight - this.size));
                 }
                 
                 this.randomEffectCounter++;
-                if (this.randomEffectCounter > 50) {
+                if (this.randomEffectCounter > EFFECT_INTERVAL) {
                     const rand = Math.random();
-                    if (rand > 0.9) {
-                        this.video.style.filter = `brightness(${Math.random() * 0.5 + 0.8})`;
-                        setTimeout(() => { this.video.style.filter = ''; }, 100);
-                    } else if (rand > 0.8) {
-                        this.video.style.filter = `hue-rotate(${Math.random() * 360}deg)`;
-                        setTimeout(() => { this.video.style.filter = ''; }, 150);
-                    } else if (rand > 0.7) {
+                    if (rand > 0.8) {
                         const shakeX = Math.random() * 8 - 4;
                         const shakeY = Math.random() * 8 - 4;
-                        this.video.style.transform = `rotate(${this.rotation}deg) translate(${shakeX}px, ${shakeY}px)`;
-                        setTimeout(() => { this.video.style.transform = `rotate(${this.rotation}deg)`; }, 50);
+                        this.effectTransform = `translate(${shakeX}px, ${shakeY}px)`;
+                        setTimeout(() => {
+                            this.effectTransform = '';
+                        }, 60);
                     }
                     this.randomEffectCounter = 0;
                 }
-
-                this.video.style.transform = `rotate(${this.rotation}deg)`;
                 this.updatePosition();
             }
 
             updatePosition() {
-                this.video.style.left = this.x + 'px';
-                this.video.style.top = this.y + 'px';
+                this.video.style.transform = `translate3d(${this.x}px, ${this.y}px, 0) ${this.effectTransform}`;
             }
         }
 
-        document.addEventListener('mousemove', (e) => {
+        document.addEventListener('pointermove', (e) => {
             if (draggedDog) {
                 draggedDog.lastX = draggedDog.x;
                 draggedDog.lastY = draggedDog.y;
@@ -259,7 +229,7 @@
             }
         });
 
-        document.addEventListener('mouseup', () => {
+        document.addEventListener('pointerup', () => {
             if (draggedDog) {
                 draggedDog.vx = draggedDog.x - draggedDog.lastX;
                 draggedDog.vy = draggedDog.y - draggedDog.lastY;
@@ -271,11 +241,11 @@
         });
 
         function spawnDog() {
-            if (videos.length < 67) {
+            if (videos.length < MAX_DOGS) {
                 const isAudioEnabled = hasStarted && videos.length === 0;
                 videos.push(new BouncingDog(videos.length, isAudioEnabled));
             }
-            const delay = Math.random() * 4000 + 1000;
+            const delay = Math.random() * (SPAWN_MAX - SPAWN_MIN) + SPAWN_MIN;
             setTimeout(spawnDog, delay);
         }
         
@@ -291,11 +261,23 @@
         });
 
         function animate() {
-            videos.forEach(dog => dog.update());
+            if (!isPageVisible) {
+                requestAnimationFrame(animate);
+                return;
+            }
+            const viewportWidth = window.innerWidth;
+            const viewportHeight = window.innerHeight;
+            for (let i = 0; i < videos.length; i++) {
+                videos[i].update(viewportWidth, viewportHeight);
+            }
             requestAnimationFrame(animate);
         }
 
         animate();
+
+        document.addEventListener('visibilitychange', () => {
+            isPageVisible = document.visibilityState === 'visible';
+        });
 
         window.addEventListener('resize', () => {
             videos.forEach(dog => {
