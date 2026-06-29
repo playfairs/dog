@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            width: 100vw;
+            height: 100vh;
+            background: black;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+        }
+
+        .entry-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: black;
+            z-index: 1000;
+            cursor: pointer;
+        }
+
+        .entry-screen.hidden {
+            display: none;
+        }
+
+        .entry-cta {
+            position: absolute;
+            font-size: 50rem;
+            color: white;
+        }
+
+        .entry-cta span {
+            display: inline-block;
+            transform: translateY(2px);
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); }
+            50% { transform: translate(-50%, -50%) scale(1.06); }
+        }
+
+        .dog-video {
+            position: absolute;
+            width: 150px;
+            height: 150px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            object-fit: cover;
+            border: 2px solid white;
+            will-change: transform;
+        }
+
+        .dog-video.hero {
+            border-radius: 0px;
+            border: none;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="entry-screen" id="entryScreen">
+        <div class="entry-cta"><span>click :D</span></div>
+    </div>
+    <script>
+        const container = document.body;
+        const videos = [];
+        const MAX_DOGS = 67;
+        const SPAWN_MIN = 1200;
+        const SPAWN_MAX = 3000;
+        const EFFECT_INTERVAL = 120;
+        let hasStarted = false;
+        let draggedDog = null;
+        let dragOffsetX = 0;
+        let dragOffsetY = 0;
+        let heroDog = null;
+        let isPageVisible = true;
+
+
+        class BouncingDog {
+            constructor(id, isAudioEnabled, isHero = false) {
+                this.video = document.createElement('video');
+                this.video.src = 'dog.mp4';
+                this.video.autoplay = true;
+                this.video.loop = true;
+                this.video.preload = isHero ? 'auto' : 'metadata';
+                this.video.muted = !isAudioEnabled;
+                this.video.className = isHero ? 'dog-video hero' : 'dog-video';
+                this.video.playsInline = true;
+                
+                if (isHero) {
+                    this.size = Math.min(window.innerWidth, window.innerHeight) * 0.9;
+                    this.video.style.width = this.size + 'px';
+                    this.video.style.height = this.size + 'px';
+                } else {
+                    this.size = Math.random() * 120 + 80;
+                    this.video.style.width = this.size + 'px';
+                    this.video.style.height = this.size + 'px';
+                }
+                
+                container.appendChild(this.video);
+
+                if (isHero) {
+                    this.x = (window.innerWidth - this.size) / 2;
+                    this.y = (window.innerHeight - this.size) / 2;
+                } else {
+                    this.x = Math.random() * (window.innerWidth - this.size);
+                    this.y = Math.random() * (window.innerHeight - this.size);
+                    
+                    const colorChance = Math.random();
+                    if (colorChance > 0.7) {
+                        const tintType = Math.floor(Math.random() * 6);
+                        let filterString = 'brightness(1.1) ';
+                        if (tintType === 0) {
+                            filterString += 'hue-rotate(0deg) saturate(1.3)'; // red
+                        } else if (tintType === 1) {
+                            filterString += 'hue-rotate(45deg) saturate(1.5)'; // orange
+                        } else if (tintType === 2) {
+                            filterString += 'hue-rotate(120deg) saturate(1.3)'; // green
+                        } else if (tintType === 3) {
+                            filterString += 'hue-rotate(200deg) saturate(1.4)'; // blue
+                        } else if (tintType === 4) {
+                            filterString += 'hue-rotate(280deg) saturate(1.3)'; // purple
+                        } else {
+                            filterString += 'hue-rotate(320deg) saturate(1.5)'; // pink
+                        }
+                        this.video.style.filter = filterString;
+                    } else if (colorChance > 5.00) {
+                        this.video.style.filter = 'invert(1)';
+                    }
+                }
+
+                this.vx = (Math.random() - 0.5) * 6;
+                this.vy = (Math.random() - 0.5) * 6;
+
+                if (Math.abs(this.vx) < 2) this.vx = this.vx > 0 ? 2 : -2;
+                if (Math.abs(this.vy) < 2) this.vy = this.vy > 0 ? 2 : -2;
+
+                this.isDragging = false;
+                this.isHero = isHero;
+                this.lastX = this.x;
+                this.lastY = this.y;
+                this.randomEffectCounter = Math.random() * EFFECT_INTERVAL;
+                this.effectTransform = '';
+                this.updatePosition();
+
+                this.video.addEventListener('pointerdown', (e) => {
+                    if (e.button !== 0 || this.isHero) return;
+                    draggedDog = this;
+                    this.isDragging = true;
+                    dragOffsetX = e.clientX - this.x;
+                    dragOffsetY = e.clientY - this.y;
+                    this.video.style.cursor = 'grabbing';
+                });
+
+                this.video.addEventListener('auxclick', (e) => {
+                    if (e.button === 1 && !this.isHero) {
+                        e.preventDefault();
+                        const speed = 700;
+                        this.vx = (Math.random() - 0.5) * speed * 2;
+                        this.vy = (Math.random() - 0.5) * speed * 2;
+                    }
+                });
+            }
+
+            update(viewportWidth, viewportHeight) {
+                if (this.isHero) {
+                    return;
+                }
+                if (this.isDragging) {
+                    return;
+                }
+
+                this.x += this.vx;
+                this.y += this.vy;
+
+                if (this.x <= 0 || this.x + this.size >= viewportWidth) {
+                    this.vx *= -1;
+                    this.x = Math.max(0, Math.min(this.x, viewportWidth - this.size));
+                }
+
+                if (this.y <= 0 || this.y + this.size >= viewportHeight) {
+                    this.vy *= -1;
+                    this.y = Math.max(0, Math.min(this.y, viewportHeight - this.size));
+                }
+                
+                this.randomEffectCounter++;
+                if (this.randomEffectCounter > EFFECT_INTERVAL) {
+                    const rand = Math.random();
+                    if (rand > 0.8) {
+                        const shakeX = Math.random() * 8 - 4;
+                        const shakeY = Math.random() * 8 - 4;
+                        this.effectTransform = `translate(${shakeX}px, ${shakeY}px)`;
+                        setTimeout(() => {
+                            this.effectTransform = '';
+                        }, 60);
+                    }
+                    this.randomEffectCounter = 0;
+                }
+                this.updatePosition();
+            }
+
+            updatePosition() {
+                this.video.style.transform = `translate3d(${this.x}px, ${this.y}px, 0) ${this.effectTransform}`;
+            }
+        }
+
+        document.addEventListener('pointermove', (e) => {
+            if (draggedDog) {
+                draggedDog.lastX = draggedDog.x;
+                draggedDog.lastY = draggedDog.y;
+                
+                draggedDog.x = e.clientX - dragOffsetX;
+                draggedDog.y = e.clientY - dragOffsetY;
+                
+                draggedDog.x = Math.max(0, Math.min(draggedDog.x, window.innerWidth - draggedDog.size));
+                draggedDog.y = Math.max(0, Math.min(draggedDog.y, window.innerHeight - draggedDog.size));
+                
+                draggedDog.updatePosition();
+            }
+        });
+
+        document.addEventListener('pointerup', () => {
+            if (draggedDog) {
+                draggedDog.vx = draggedDog.x - draggedDog.lastX;
+                draggedDog.vy = draggedDog.y - draggedDog.lastY;
+                
+                draggedDog.isDragging = false;
+                draggedDog.video.style.cursor = 'grab';
+                draggedDog = null;
+            }
+        });
+
+        function spawnDog() {
+            if (videos.length < MAX_DOGS) {
+                const isAudioEnabled = hasStarted && videos.length === 0;
+                videos.push(new BouncingDog(videos.length, isAudioEnabled));
+            }
+            const delay = Math.random() * (SPAWN_MAX - SPAWN_MIN) + SPAWN_MIN;
+            setTimeout(spawnDog, delay);
+        }
+        
+        const entryScreen = document.getElementById('entryScreen');
+        entryScreen.addEventListener('click', () => {
+            if (!hasStarted) {
+                hasStarted = true;
+                entryScreen.classList.add('hidden');
+                heroDog = new BouncingDog(0, true, true);
+                videos.push(heroDog);
+                spawnDog();
+            }
+        });
+
+        function animate() {
+            if (!isPageVisible) {
+                requestAnimationFrame(animate);
+                return;
+            }
+            const viewportWidth = window.innerWidth;
+            const viewportHeight = window.innerHeight;
+            for (let i = 0; i < videos.length; i++) {
+                videos[i].update(viewportWidth, viewportHeight);
+            }
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+
+        document.addEventListener('visibilitychange', () => {
+            isPageVisible = document.visibilityState === 'visible';
+        });
+
+        window.addEventListener('resize', () => {
+            videos.forEach(dog => {
+                if (dog.isHero) {
+                    dog.size = Math.min(window.innerWidth, window.innerHeight) * 0.9;
+                    dog.video.style.width = dog.size + 'px';
+                    dog.video.style.height = dog.size + 'px';
+                    dog.x = (window.innerWidth - dog.size) / 2;
+                    dog.y = (window.innerHeight - dog.size) / 2;
+                } else {
+                    dog.x = Math.max(0, Math.min(dog.x, window.innerWidth - dog.size));
+                    dog.y = Math.max(0, Math.min(dog.y, window.innerHeight - dog.size));
+                }
+                dog.updatePosition();
+            });
+        });
+    </script>
+</body>
+</html>
