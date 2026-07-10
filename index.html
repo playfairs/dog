@@ -19,57 +19,65 @@
             display: grid;
             place-items: center;
             padding: 24px;
-            background: #000000;
+            background: radial-gradient(circle at top, #1d1d1d 0%, #050505 70%);
             color: #f5f5f5;
-            font-family: "Courier New", Courier, monospace;
+            font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif;
         }
 
         .card {
-            width: min(100%, 560px);
-            border: 2px solid #f5f5f5;
-            background: #111111;
-            padding: 32px;
-            box-shadow: 8px 8px 0 #f5f5f5;
+            width: min(100%, 580px);
+            border: 1px solid rgba(255,255,255,0.16);
+            background: rgba(17, 17, 17, 0.95);
+            padding: 36px;
+            border-radius: 1px;
+            box-shadow: 0 18px 45px rgba(0, 0, 0, 0.35);
+            backdrop-filter: blur(10px);
         }
 
         .eyebrow {
-            font-size: 0.9rem;
-            letter-spacing: 0.2em;
+            font-size: 0.82rem;
+            letter-spacing: 0.24em;
             text-transform: uppercase;
             margin-bottom: 12px;
+            color: #c7b6ff;
         }
 
         h1 {
             margin: 0 0 10px;
             font-size: clamp(2.6rem, 8vw, 4rem);
             line-height: 1;
+            letter-spacing: -0.02em;
         }
 
         p {
             margin: 0 0 14px;
-            font-size: 1.05rem;
-            line-height: 1.6;
+            font-size: 1rem;
+            line-height: 1.7;
+            color: #e8e8e8;
         }
 
         button {
-            border: 2px solid #f5f5f5;
-            background: #ffef7a;
+            border: 0;
+            background: linear-gradient(135deg, #ffe26b 0%, #ffbf1f 100%);
             color: #111111;
-            padding: 12px 16px;
+            padding: 12px 20px;
             cursor: pointer;
             font: inherit;
             font-size: 1rem;
-            box-shadow: 4px 4px 0 #f5f5f5;
+            font-weight: 600;
+            border-radius: 1px;
+            box-shadow: 0 10px 24px rgba(255, 191, 31, 0.22);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
 
         button:hover {
-            transform: translate(-1px, -1px);
-            box-shadow: 4px 4px 0 #f5f5f5;
+            transform: translateY(-1px);
+            box-shadow: 0 12px 28px rgba(255, 191, 31, 0.28);
         }
 
         .dog-panel {
-            margin-top: 20px;
-            border-top: 2px solid #f5f5f5;
+            margin-top: 24px;
+            border-top: 1px solid rgba(255,255,255,0.16);
             padding-top: 20px;
             display: none;
         }
@@ -86,7 +94,8 @@
             width: 100%;
             aspect-ratio: 1 / 1;
             object-fit: cover;
-            border: 2px solid #f5f5f5;
+            border: 1px solid rgba(255,255,255,0.18);
+            border-radius: 1px;
             background: #1a1a1a;
             display: block;
             transition: filter 0.2s linear, transform 0.2s linear;
@@ -95,14 +104,36 @@
         .tiny {
             font-size: 0.95rem;
             margin-top: 12px;
+            color: #d0d0d0;
+        }
+
+        .owner-link {
+            margin: 0 0 20px;
+            font-size: 0.95rem;
+            display: inline-block;
+            padding: 8px 12px;
+            border-radius: 1px;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .owner-link a {
+            color: #ffe26b;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .owner-link a:hover {
+            text-decoration: underline;
         }
     </style>
 </head>
 <body>
     <main class="card">
-        <div class="eyebrow">the greatest website ever</div>
+        <div class="eyebrow">featured companion</div>
         <h1>jomvet</h1>
-        <p>please click the button below if you like dogs</p>
+        <p>A polished introduction to a very good dog.</p>
+        <p class="owner-link">Owner: <a href="https://www.instagram.com/mha.mahamek" target="_blank" rel="noopener noreferrer">@mha.mahamek</a></p>
         <button id="summonButton" type="button">summon jomvet</button>
 
         <section class="dog-panel" id="dogPanel">
@@ -125,7 +156,7 @@
             'jomvet is now very upset.',
             'jomvet is screaming internally.',
             'jomvet is absolutely not okay.',
-            'ur deep frying the dog in real time, STOP',
+            'ur deep frying jomvet in real time, STOP',
             'jomvet is now a menace.',
             'do you want to fucking die',
         ];
