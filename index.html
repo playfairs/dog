@@ -3,263 +3,296 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>jomvet</title>
     <style>
-        :root {
-            color-scheme: dark;
-        }
-
         * {
+            margin: 0;
+            padding: 0;
             box-sizing: border-box;
         }
 
         body {
-            margin: 0;
-            min-height: 100vh;
-            display: grid;
-            place-items: center;
-            padding: 24px;
-            background: radial-gradient(circle at top, #1d1d1d 0%, #050505 70%);
-            color: #f5f5f5;
-            font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif;
+            width: 100vw;
+            height: 100vh;
+            background: black;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
         }
 
-        .card {
-            width: min(100%, 580px);
-            border: 1px solid rgba(255,255,255,0.16);
-            background: rgba(17, 17, 17, 0.95);
-            padding: 36px;
-            border-radius: 1px;
-            box-shadow: 0 18px 45px rgba(0, 0, 0, 0.35);
-            backdrop-filter: blur(10px);
-        }
-
-        .eyebrow {
-            font-size: 0.82rem;
-            letter-spacing: 0.24em;
-            text-transform: uppercase;
-            margin-bottom: 12px;
-            color: #c7b6ff;
-        }
-
-        h1 {
-            margin: 0 0 10px;
-            font-size: clamp(2.6rem, 8vw, 4rem);
-            line-height: 1;
-            letter-spacing: -0.02em;
-        }
-
-        p {
-            margin: 0 0 14px;
-            font-size: 1rem;
-            line-height: 1.7;
-            color: #e8e8e8;
-        }
-
-        button {
-            border: 0;
-            background: linear-gradient(135deg, #ffe26b 0%, #ffbf1f 100%);
-            color: #111111;
-            padding: 12px 20px;
+        .entry-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: black;
+            z-index: 1000;
             cursor: pointer;
-            font: inherit;
-            font-size: 1rem;
-            font-weight: 600;
-            border-radius: 1px;
-            box-shadow: 0 10px 24px rgba(255, 191, 31, 0.22);
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
 
-        button:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 12px 28px rgba(255, 191, 31, 0.28);
-        }
-
-        .dog-panel {
-            margin-top: 24px;
-            border-top: 1px solid rgba(255,255,255,0.16);
-            padding-top: 20px;
+        .entry-screen.hidden {
             display: none;
         }
 
-        .dog-panel.show {
-            display: block;
+        .entry-cta {
+            position: absolute;
+            font-size: 50rem;
+            color: white;
         }
 
-        .dog-panel.angry .tiny {
-            color: #ff8f8f;
-        }
-
-        video {
-            width: 100%;
-            aspect-ratio: 1 / 1;
-            object-fit: cover;
-            border: 1px solid rgba(255,255,255,0.18);
-            border-radius: 1px;
-            background: #1a1a1a;
-            display: block;
-            transition: filter 0.2s linear, transform 0.2s linear;
-        }
-
-        .tiny {
-            font-size: 0.95rem;
-            margin-top: 12px;
-            color: #d0d0d0;
-        }
-
-        .owner-link {
-            margin: 0 0 20px;
-            font-size: 0.95rem;
+        .entry-cta span {
             display: inline-block;
-            padding: 8px 12px;
-            border-radius: 1px;
-            background: rgba(255,255,255,0.06);
-            border: 1px solid rgba(255,255,255,0.1);
+            transform: translateY(2px);
         }
 
-        .owner-link a {
-            color: #ffe26b;
-            text-decoration: none;
-            font-weight: 600;
+        @keyframes pulse {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); }
+            50% { transform: translate(-50%, -50%) scale(1.06); }
         }
 
-        .owner-link a:hover {
-            text-decoration: underline;
+        .dog-video {
+            position: absolute;
+            width: 150px;
+            height: 150px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            object-fit: cover;
+            border: 2px solid white;
+            will-change: transform;
         }
+
+        .dog-video.hero {
+            border-radius: 0px;
+            border: none;
+        }
+
     </style>
 </head>
 <body>
-    <main class="card">
-        <div class="eyebrow">dumbassdog.com</div>
-        <h1>jomvet</h1>
-        <p>can u click the buttons below pls and thanks</p>
-        <p class="owner-link">Owner: <a href="https://www.instagram.com/mha.mahamek" target="_blank" rel="noopener noreferrer">@mha.mahamek</a></p>
-        <button id="summonButton" type="button">summon jomvet</button>
-
-        <section class="dog-panel" id="dogPanel">
-            <video id="dogVideo" autoplay loop muted playsinline preload="auto" src="dog.mp4"></video>
-            <p class="tiny" id="dogNote">jomvet has arrived. please act normal.</p>
-        </section>
-    </main>
-
+    <div class="entry-screen" id="entryScreen">
+        <div class="entry-cta"><span>click :D</span></div>
+    </div>
     <script>
-        const button = document.getElementById('summonButton');
-        const panel = document.getElementById('dogPanel');
-        const video = document.getElementById('dogVideo');
-        const note = document.getElementById('dogNote');
-        const angryMessages = [
-            'jomvet has arrived. please act normal.',
-            'jomvet is now mildly offended.',
-            'jomvet is staring at you.',
-            'jomvet wants you to stop.',
-            'jomvet has chosen violence.',
-            'jomvet is now very upset.',
-            'jomvet is screaming internally.',
-            'jomvet is absolutely not okay.',
-            'ur deep frying jomvet in real time, STOP',
-            'jomvet is now a menace.',
-            'do you want to fucking die',
-        ];
-        let hasSeenDog = false;
-        let angryClickCount = 0;
-        let angryTimer = null;
-        let audioContext = null;
-        let audioSource = null;
-        let distortionNode = null;
-        let filterNode = null;
-        let gainNode = null;
+        const container = document.body;
+        const videos = [];
+        const MAX_DOGS = 67;
+        const SPAWN_MIN = 1200;
+        const SPAWN_MAX = 3000;
+        const EFFECT_INTERVAL = 120;
+        let hasStarted = false;
+        let draggedDog = null;
+        let dragOffsetX = 0;
+        let dragOffsetY = 0;
+        let heroDog = null;
+        let isPageVisible = true;
 
-        function makeDistortionCurve(amount) {
-            const samples = 2048;
-            const curve = new Float32Array(samples);
-            for (let i = 0; i < samples; i++) {
-                const x = (i / samples) * 2 - 1;
-                curve[i] = Math.tanh(x * amount) / Math.tanh(amount);
-            }
-            return curve;
-        }
 
-        function ensureAudioSetup() {
-            if (!audioContext) {
-                audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                audioSource = audioContext.createMediaElementSource(video);
-                filterNode = audioContext.createBiquadFilter();
-                filterNode.type = 'lowpass';
-                filterNode.frequency.value = 1400;
-                filterNode.Q.value = 1.1;
-
-                distortionNode = audioContext.createWaveShaper();
-                distortionNode.curve = makeDistortionCurve(2.6);
-                distortionNode.oversample = '4x';
-
-                gainNode = audioContext.createGain();
-                gainNode.gain.value = 0.9;
-
-                audioSource.connect(filterNode);
-                filterNode.connect(distortionNode);
-                distortionNode.connect(gainNode);
-                gainNode.connect(audioContext.destination);
-            }
-
-            if (audioContext.state === 'suspended') {
-                audioContext.resume().catch(() => {});
-            }
-        }
-
-        function updateDogMood() {
-            const intensity = Math.min(8, angryClickCount);
-            const fry = intensity * 0.16;
-            video.style.filter = [
-                `brightness(${1 + fry * 0.2})`,
-                `contrast(${1 + fry * 0.5})`,
-                `saturate(${1 + fry * 1.1})`,
-                `hue-rotate(${fry * 10}deg)`,
-                `sepia(${Math.min(0.35, fry * 0.12)})`,
-                `grayscale(${Math.min(0.2, fry * 0.04)})`,
-                `blur(${Math.min(0.4, fry * 0.03)}px)`
-            ].join(' ');
-            video.style.transform = `scale(${1 + fry * 0.01})`;
-            panel.classList.toggle('angry', intensity >= 3);
-
-            if (filterNode && distortionNode && gainNode) {
-                if (intensity >= 3) {
-                    filterNode.type = 'lowpass';
-                    filterNode.frequency.value = Math.max(260, 900 - intensity * 90);
-                    filterNode.Q.value = 1.0 + intensity * 0.16;
-                    distortionNode.curve = makeDistortionCurve(2.2 + intensity * 0.6);
-                    gainNode.gain.value = Math.max(0.3, 0.85 - intensity * 0.04);
+        class BouncingDog {
+            constructor(id, isAudioEnabled, isHero = false) {
+                this.video = document.createElement('video');
+                this.video.src = 'dog.mp4';
+                this.video.autoplay = true;
+                this.video.loop = true;
+                this.video.preload = isHero ? 'auto' : 'metadata';
+                this.video.muted = !isAudioEnabled;
+                this.video.className = isHero ? 'dog-video hero' : 'dog-video';
+                this.video.playsInline = true;
+                
+                if (isHero) {
+                    this.size = Math.min(window.innerWidth, window.innerHeight) * 0.9;
+                    this.video.style.width = this.size + 'px';
+                    this.video.style.height = this.size + 'px';
                 } else {
-                    filterNode.type = 'lowpass';
-                    filterNode.frequency.value = 1800;
-                    filterNode.Q.value = 0.7;
-                    distortionNode.curve = makeDistortionCurve(0.5);
-                    gainNode.gain.value = 0.75;
+                    this.size = Math.random() * 120 + 80;
+                    this.video.style.width = this.size + 'px';
+                    this.video.style.height = this.size + 'px';
                 }
-                video.playbackRate = Math.max(0.7, 1 - intensity * 0.05);
+                
+                container.appendChild(this.video);
+
+                if (isHero) {
+                    this.x = (window.innerWidth - this.size) / 2;
+                    this.y = (window.innerHeight - this.size) / 2;
+                } else {
+                    this.x = Math.random() * (window.innerWidth - this.size);
+                    this.y = Math.random() * (window.innerHeight - this.size);
+                    
+                    const colorChance = Math.random();
+                    if (colorChance > 0.7) {
+                        const tintType = Math.floor(Math.random() * 6);
+                        let filterString = 'brightness(1.1) ';
+                        if (tintType === 0) {
+                            filterString += 'hue-rotate(0deg) saturate(1.3)'; // red
+                        } else if (tintType === 1) {
+                            filterString += 'hue-rotate(45deg) saturate(1.5)'; // orange
+                        } else if (tintType === 2) {
+                            filterString += 'hue-rotate(120deg) saturate(1.3)'; // green
+                        } else if (tintType === 3) {
+                            filterString += 'hue-rotate(200deg) saturate(1.4)'; // blue
+                        } else if (tintType === 4) {
+                            filterString += 'hue-rotate(280deg) saturate(1.3)'; // purple
+                        } else {
+                            filterString += 'hue-rotate(320deg) saturate(1.5)'; // pink
+                        }
+                        this.video.style.filter = filterString;
+                    } else if (colorChance > 5.00) {
+                        this.video.style.filter = 'invert(1)';
+                    }
+                }
+
+                this.vx = (Math.random() - 0.5) * 6;
+                this.vy = (Math.random() - 0.5) * 6;
+
+                if (Math.abs(this.vx) < 2) this.vx = this.vx > 0 ? 2 : -2;
+                if (Math.abs(this.vy) < 2) this.vy = this.vy > 0 ? 2 : -2;
+
+                this.isDragging = false;
+                this.isHero = isHero;
+                this.lastX = this.x;
+                this.lastY = this.y;
+                this.randomEffectCounter = Math.random() * EFFECT_INTERVAL;
+                this.effectTransform = '';
+                this.updatePosition();
+
+                this.video.addEventListener('pointerdown', (e) => {
+                    if (e.button !== 0 || this.isHero) return;
+                    draggedDog = this;
+                    this.isDragging = true;
+                    dragOffsetX = e.clientX - this.x;
+                    dragOffsetY = e.clientY - this.y;
+                    this.video.style.cursor = 'grabbing';
+                });
+
+                this.video.addEventListener('auxclick', (e) => {
+                    if (e.button === 1 && !this.isHero) {
+                        e.preventDefault();
+                        const speed = 700;
+                        this.vx = (Math.random() - 0.5) * speed * 2;
+                        this.vy = (Math.random() - 0.5) * speed * 2;
+                    }
+                });
+            }
+
+            update(viewportWidth, viewportHeight) {
+                if (this.isHero) {
+                    return;
+                }
+                if (this.isDragging) {
+                    return;
+                }
+
+                this.x += this.vx;
+                this.y += this.vy;
+
+                if (this.x <= 0 || this.x + this.size >= viewportWidth) {
+                    this.vx *= -1;
+                    this.x = Math.max(0, Math.min(this.x, viewportWidth - this.size));
+                }
+
+                if (this.y <= 0 || this.y + this.size >= viewportHeight) {
+                    this.vy *= -1;
+                    this.y = Math.max(0, Math.min(this.y, viewportHeight - this.size));
+                }
+                
+                this.randomEffectCounter++;
+                if (this.randomEffectCounter > EFFECT_INTERVAL) {
+                    const rand = Math.random();
+                    if (rand > 0.8) {
+                        const shakeX = Math.random() * 8 - 4;
+                        const shakeY = Math.random() * 8 - 4;
+                        this.effectTransform = `translate(${shakeX}px, ${shakeY}px)`;
+                        setTimeout(() => {
+                            this.effectTransform = '';
+                        }, 60);
+                    }
+                    this.randomEffectCounter = 0;
+                }
+                this.updatePosition();
+            }
+
+            updatePosition() {
+                this.video.style.transform = `translate3d(${this.x}px, ${this.y}px, 0) ${this.effectTransform}`;
             }
         }
 
-        function setRandomAngryText() {
-            const message = angryMessages[Math.floor(Math.random() * angryMessages.length)];
-            note.textContent = message;
+        document.addEventListener('pointermove', (e) => {
+            if (draggedDog) {
+                draggedDog.lastX = draggedDog.x;
+                draggedDog.lastY = draggedDog.y;
+                
+                draggedDog.x = e.clientX - dragOffsetX;
+                draggedDog.y = e.clientY - dragOffsetY;
+                
+                draggedDog.x = Math.max(0, Math.min(draggedDog.x, window.innerWidth - draggedDog.size));
+                draggedDog.y = Math.max(0, Math.min(draggedDog.y, window.innerHeight - draggedDog.size));
+                
+                draggedDog.updatePosition();
+            }
+        });
+
+        document.addEventListener('pointerup', () => {
+            if (draggedDog) {
+                draggedDog.vx = draggedDog.x - draggedDog.lastX;
+                draggedDog.vy = draggedDog.y - draggedDog.lastY;
+                
+                draggedDog.isDragging = false;
+                draggedDog.video.style.cursor = 'grab';
+                draggedDog = null;
+            }
+        });
+
+        function spawnDog() {
+            if (videos.length < MAX_DOGS) {
+                const isAudioEnabled = hasStarted && videos.length === 0;
+                videos.push(new BouncingDog(videos.length, isAudioEnabled));
+            }
+            const delay = Math.random() * (SPAWN_MAX - SPAWN_MIN) + SPAWN_MIN;
+            setTimeout(spawnDog, delay);
+        }
+        
+        const entryScreen = document.getElementById('entryScreen');
+        entryScreen.addEventListener('click', () => {
+            if (!hasStarted) {
+                hasStarted = true;
+                entryScreen.classList.add('hidden');
+                heroDog = new BouncingDog(0, true, true);
+                videos.push(heroDog);
+                spawnDog();
+            }
+        });
+
+        function animate() {
+            if (!isPageVisible) {
+                requestAnimationFrame(animate);
+                return;
+            }
+            const viewportWidth = window.innerWidth;
+            const viewportHeight = window.innerHeight;
+            for (let i = 0; i < videos.length; i++) {
+                videos[i].update(viewportWidth, viewportHeight);
+            }
+            requestAnimationFrame(animate);
         }
 
-        button.addEventListener('click', () => {
-            ensureAudioSetup();
-            panel.classList.add('show');
-            video.muted = false;
-            video.play().catch(() => {});
+        animate();
 
-            angryClickCount = Math.min(8, angryClickCount + 1);
-            if (angryTimer) clearTimeout(angryTimer);
-            angryTimer = setTimeout(() => {
-                angryClickCount = Math.max(0, angryClickCount - 1);
-                updateDogMood();
-            }, 1100);
+        document.addEventListener('visibilitychange', () => {
+            isPageVisible = document.visibilityState === 'visible';
+        });
 
-            updateDogMood();
-            setRandomAngryText();
-            button.textContent = angryClickCount >= 3 ? 'stop summoning jomvet' : 'summon again';
+        window.addEventListener('resize', () => {
+            videos.forEach(dog => {
+                if (dog.isHero) {
+                    dog.size = Math.min(window.innerWidth, window.innerHeight) * 0.9;
+                    dog.video.style.width = dog.size + 'px';
+                    dog.video.style.height = dog.size + 'px';
+                    dog.x = (window.innerWidth - dog.size) / 2;
+                    dog.y = (window.innerHeight - dog.size) / 2;
+                } else {
+                    dog.x = Math.max(0, Math.min(dog.x, window.innerWidth - dog.size));
+                    dog.y = Math.max(0, Math.min(dog.y, window.innerHeight - dog.size));
+                }
+                dog.updatePosition();
+            });
         });
     </script>
 </body>
